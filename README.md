@@ -18,8 +18,7 @@ Windows:
 
 Unix/MacOS:
 3. source venv/bin/activate
-
-
+```
 
 ## How to Use
 
