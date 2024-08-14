@@ -4,6 +4,7 @@ from typing import IO
 import xml.etree.ElementTree as ET
 from xml.sax.saxutils import escape
 import xml.sax
+import xml.sax.xmlreader
 from dataclasses import dataclass, field
 
 from marciplier.marc_record import (
@@ -22,11 +23,11 @@ class FinishedParsing(Exception):
 # Dataclass to manage the state while parsing MARC XML
 @dataclass
 class MarcXMLState:
-    max_records: int = None  # Maximum number of records to parse
-    current_marc_record: ConvertedRecord = None  # Current MARC record being parsed
-    current_text: str = None  # Text content of the current XML element
-    current_attrs = None  # Attributes of the current XML element
-    current_open_tag: str = None  # Name of the current open tag in the XML
+    max_records: int | None = None  # Maximum number of records to parse
+    current_marc_record: ConvertedRecord | None = None  # Current MARC record being parsed
+    current_text: str | None = None  # Text content of the current XML element
+    current_attrs: xml.sax.xmlreader.AttributesImpl | None = None  # Attributes of the current XML element
+    current_open_tag: str | None = None  # Name of the current open tag in the XML
     current_record_count: int = 0  # Counter for records parsed
     finished: bool = False  # Flag to indicate if parsing should stop
     records: list = field(default_factory=list)  # List to store all parsed MARC records
@@ -132,7 +133,7 @@ class Subfield(MarcXmlElement):
 
 # XML SAX content handler for parsing MARC records
 class MarcXmlHandler(xml.sax.handler.ContentHandler):
-    def __init__(self, max_records=100):
+    def __init__(self, max_records: int | None = None):
         super().__init__()
         self.marc_xml_state = MarcXMLState(max_records=max_records)
         marc_ns = "marc:"  # Namespace prefix for MARC elements

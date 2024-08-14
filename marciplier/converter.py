@@ -19,11 +19,7 @@ def convert(src: Any, src_format: str, target_format: str) -> Union[dict, list, 
 
     result = src
     if src_format != "records":
-        if not isinstance(src_strategy, ConversionStrategy):
-            raise ValueError(f"Invalid conversion strategy for {src_format}")
         result = src_strategy.to_records(src)
     if target_format != "records":
-        if not isinstance(target_strategy, ConversionStrategy):
-            raise ValueError(f"Invalid conversion strategy for {target_format}")
         return target_strategy.from_records(result)
     return result

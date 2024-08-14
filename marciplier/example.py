@@ -5,4 +5,4 @@ download_file(url="https://data.digar.ee/erb/ERB_eestikeelne_raamat.zip", filena
 src = extract_archive(archive_path="data/ERB_eestikeelne_raamat.zip", extract_to="data")
 
 result = convert(src, src_format="xml", target_format="records")
-print(result)
+print(len(result))
