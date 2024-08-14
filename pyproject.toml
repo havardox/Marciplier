@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "marciplier"
+version = "0.1.0"
+description = ""
+authors = ["havardox <harald.varner@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pandas = "^2.2.2"
+requests = "^2.32.3"
+ipykernel = "^6.29.5"
+lxml = "^5.2.2"
+xmlschema = "^3.3.2"
+py7zr = "^0.22.0"
+pymarc = "^5.2.2"
+mypy = "^1.11.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
