@@ -10,9 +10,16 @@ If you found this repo through Google, please do consider giving it a star. It r
 
 ```python
 (From your project directory)
-python -m venv venv
-pip install https://github.com/havardox/Marciplier.git
-```
+1. python -m venv venv
+2. pip install https://github.com/havardox/Marciplier.git
+
+Windows:
+3. venv\Scripts\activate
+
+Unix/MacOS:
+3. source venv/bin/activate
+
+
 
 ## How to Use
 
