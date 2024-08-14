@@ -1,10 +1,17 @@
 # marcxml_to_records.py
-from pathlib import Path
+import os
 from typing import IO
+import xml.etree.ElementTree as ET
+from xml.sax.saxutils import escape
 import xml.sax
 from dataclasses import dataclass, field
 
-from marciplier.marc_record import MarcRecord as ConvertedRecord, Leader as ConvertedLeader, ControlField as ConvertedControlField, DataField as ConvertedDataField
+from marciplier.marc_record import (
+    MarcRecord as ConvertedRecord,
+    Leader as ConvertedLeader,
+    ControlField as ConvertedControlField,
+    DataField as ConvertedDataField,
+)
 
 
 # Custom exception to signal the parser to stop when the maximum number of records is reached
@@ -51,7 +58,9 @@ class Record(MarcXmlElement):
 
     def start(self):
         # Initialize a new MARC record
-        self.marc_xml_state.current_marc_record = ConvertedRecord(leader=ConvertedLeader(""))
+        self.marc_xml_state.current_marc_record = ConvertedRecord(
+            leader=ConvertedLeader("")
+        )
         # Check if the maximum record count has been reached
         if self.marc_xml_state.max_records is not None:
             self.marc_xml_state.current_record_count += 1
@@ -88,7 +97,6 @@ class ControlField(MarcXmlElement):
         self.marc_xml_state.current_marc_record.add_field(control_field)
 
 
-
 # Class to handle the "datafield" element in the MARC XML
 class DataField(MarcXmlElement):
     DEFINED_EVENTS = ("start",)
@@ -121,7 +129,6 @@ class Subfield(MarcXmlElement):
                 field.add_subfield(code=code, value=value)
                 break
 
-do_print = 0
 
 # XML SAX content handler for parsing MARC records
 class MarcXmlHandler(xml.sax.handler.ContentHandler):
@@ -151,11 +158,10 @@ class MarcXmlHandler(xml.sax.handler.ContentHandler):
             if "end" in marc_element.DEFINED_EVENTS:
                 self.elements_to_call["end"][element_name] = marc_element
 
-
     # Handle the start of an XML element
     def startElement(self, name, attrs):
         marc_element = self.elements_to_call["start"].get(name)
-        
+
         self.current_element = name
         self.marc_xml_state.current_attrs = attrs
         if marc_element is None:
@@ -187,14 +193,75 @@ class MarcXmlHandler(xml.sax.handler.ContentHandler):
                 self.marc_xml_state.current_text = content
 
 
-def marcxml_to_records(records: IO[bytes] | str | Path) -> list:
-    # Initialize the SAX handler
-    content_handler = MarcXmlHandler()
+class MarcXmlConversionStrategy:
+    def to_records(self, src: str | os.PathLike | IO[bytes]) -> list[ConvertedRecord]:
+        content_handler = MarcXmlHandler()
 
-    try:
-        # Parse the XML content from the provided source
-        xml.sax.parse(records, content_handler)
-    except FinishedParsing:
-        pass
+        try:
+            # Parse the XML content from the provided source
+            xml.sax.parse(src, content_handler)
+        except FinishedParsing:
+            pass
 
-    return content_handler.marc_xml_state.records
+        return content_handler.marc_xml_state.records
+
+    def from_records(self, src: list[ConvertedRecord]) -> ET.Element:
+
+        # Define the namespaces with the desired prefixes
+        ns = {
+            "marc": "http://www.loc.gov/MARC21/slim",
+            "xsi": "http://www.w3.org/2001/XMLSchema-instance",
+        }
+
+        # Register the namespaces to ensure the correct prefix is used
+        for prefix, uri in ns.items():
+            ET.register_namespace(prefix, uri)
+
+        # Create the root element <marc:collection> with the additional attributes
+        root = ET.Element(
+            "{http://www.loc.gov/MARC21/slim}collection",
+            {
+                "{http://www.w3.org/2001/XMLSchema-instance}schemaLocation": "http://www.loc.gov/MARC21/slim http://www.loc.gov/standards/marcxml/schema/MARC21slim.xsd"
+            },
+        )
+
+        for record in src:
+            record_elem = ET.SubElement(root, "{http://www.loc.gov/MARC21/slim}record")
+
+            # Add leader element
+            leader_elem = ET.SubElement(
+                record_elem, "{http://www.loc.gov/MARC21/slim}leader"
+            )
+            value = escape(record.leader.value)
+            leader_elem.text = value
+
+            # Add fields
+            for field in record.controlfields:
+
+                # Handle control fields
+                control_field = ET.SubElement(
+                    record_elem,
+                    "{http://www.loc.gov/MARC21/slim}controlfield",
+                    tag=field.tag,
+                )
+                control_field.text = escape(value)
+
+            for field in record.datafields:
+                # Handle data fields
+                data_field = ET.SubElement(
+                    record_elem,
+                    "{http://www.loc.gov/MARC21/slim}datafield",
+                    tag=field.tag,
+                    ind1=field.indicators[0] if field.indicators else " ",
+                    ind2=field.indicators[1] if len(field.indicators) > 1 else " ",
+                )
+                for subfield in field.subfields:
+                    for value in subfield.values:
+                        subfield_elem = ET.SubElement(
+                            data_field,
+                            "{http://www.loc.gov/MARC21/slim}subfield",
+                            code=subfield.code,
+                        )
+                        subfield_elem.text = escape(value)
+
+        return root

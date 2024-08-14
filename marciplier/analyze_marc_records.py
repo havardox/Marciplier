@@ -1,9 +1,6 @@
 from collections import Counter
-import json
 
-from pymarc import Leader
-
-from marciplier.marc_record import ControlField, DataField, MarcRecord
+from marciplier.marc_record import MarcRecord
 
 # Function to count unique fields and perform statistical analysis on field tags and tag-subfield pairs
 def analyze_marc_records(marc_records: list[MarcRecord]) -> dict:
