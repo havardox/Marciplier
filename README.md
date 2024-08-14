@@ -16,7 +16,7 @@ pip install https://github.com/havardox/Marciplier.git
 
 ## How to Use
 
-Here's a simple example of how to use Marciplier to convert a MARCXML file to JSON:
+Here's a simple example of how to use Marciplier to convert a MARCXML file to JSON format:
 
 ```python
 from marciplier.utils import download_file, extract_archive
