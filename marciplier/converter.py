@@ -7,10 +7,15 @@ from marciplier.conversion_strategy import ConversionStrategy
 STRATEGIES: dict[str, ConversionStrategy | Literal["records"]] = {
     "json": MarcJsonConversionStrategy(),
     "xml": MarcXmlConversionStrategy(),
-    "records": "records"
+    "records": "records",
 }
 
-def convert(src: Any, src_format: str, target_format: str) -> Union[dict, list, str]:
+
+def convert(
+    src: Any,
+    src_format: Literal["json", "xml", "records"],
+    target_format: Literal["json", "xml", "records"],
+) -> Union[dict, list, str]:
     if src_format not in STRATEGIES or target_format not in STRATEGIES:
         raise ValueError(f"Unsupported format: {src_format} or {target_format}")
 
