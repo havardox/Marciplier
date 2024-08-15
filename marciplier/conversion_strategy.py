@@ -1,6 +1,7 @@
 # Strategy interface for conversion
 from typing import Any, Protocol
-from marc_record import MarcRecord
+
+from marciplier.marc_record import MarcRecord
 
 
 class ConversionStrategy(Protocol):
