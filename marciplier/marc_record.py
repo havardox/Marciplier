@@ -1,15 +1,14 @@
 import json
 from typing import Any
 
+
 # Class representing the MARC21 Leader
 class Leader:
     def __init__(self, value: str) -> None:
-        self.value = value.strip('\n')
+        self.value = value.strip("\n")
 
     def to_dict(self) -> dict[str, str]:
-        return {
-            "leader": f"{self.value}"
-        }
+        return {"leader": f"{self.value}"}
 
     def __repr__(self) -> str:
         return f"Leader: {self.value}"
@@ -22,17 +21,33 @@ class Subfield:
         self.values = values
 
     def to_dict(self) -> dict[str, list[str]]:
-        return {
-            self.code: self.values
-        }
+        return {self.code: self.values}
 
     def __repr__(self) -> str:
         return f"Subfield(Code: {self.code}, Values: {self.values})"
 
 
+# Derived class for control fields (00X fields)
+class ControlField:
+    def __init__(self, tag: str, values: list[str]) -> None:
+        self.tag = tag
+        self.values = values
+
+    def to_dict(self) -> dict[str, str]:
+        return {self.tag: self.values}
+
+    def __repr__(self) -> str:
+        return f"ControlField(Tag: {self.tag}, Value: {self.values})"
+
+
 # Base class for a generic MARC21 field
-class Field:
-    def __init__(self, tag: str, indicators: list[str] | None = None, subfields: list[Subfield] | None = None) -> None:
+class DataField:
+    def __init__(
+        self,
+        tag: str,
+        indicators: list[str] | None = None,
+        subfields: list[Subfield] | None = None,
+    ) -> None:
         self.tag = tag
         self.indicators = tuple(indicators) if indicators else ()
         self.subfields = subfields if subfields else []
@@ -46,44 +61,15 @@ class Field:
         # If code does not exist, create a new Subfield
         self.subfields.append(Subfield(code, [value]))
 
-    def get_subfield(self, code: str) -> list[str]:
-        subfields = []
+    def get_subfield(self, code: str) -> Subfield | None:
         for subfield in self.subfields:
             if subfield.code == code:
-                subfields.append(subfield)
+                return subfield
 
-        return subfields
 
     def to_dict(self) -> dict[str, Any]:
         subfields_list = [subfield.to_dict() for subfield in self.subfields]
-        return {
-            "indicators": self.indicators,
-            "subfields": subfields_list
-        }
-
-    def __repr__(self) -> str:
-        return f"Tag: {self.tag}, Indicators: {self.indicators}, Subfields: {self.subfields}"
-
-
-# Derived class for control fields (00X fields)
-class ControlField(Field):
-    def __init__(self, tag: str, value: str) -> None:
-        super().__init__(tag)
-        self.value = value.strip('\n')
-
-    def to_dict(self) -> dict[str, str]:
-        return {
-            self.tag: self.value
-        }
-
-    def __repr__(self) -> str:
-        return f"ControlField(Tag: {self.tag}, Value: {self.value})"
-
-
-# Derived class for data fields (01X-88X fields)
-class DataField(Field):
-    def __init__(self, tag: str, indicators: list[str] | None = None) -> None:
-        super().__init__(tag, indicators)
+        return {"indicators": self.indicators, "subfields": subfields_list}
 
     def __repr__(self) -> str:
         return f"DataField(Tag: {self.tag}, Indicators: {self.indicators}, Subfields: {self.subfields})"
@@ -94,27 +80,34 @@ class MarcRecord:
     def __init__(self, leader: Leader) -> None:
         self.leader = leader
         self.controlfields: list[ControlField] = []
-        self.datafields: list[DataField] = []
+        self.data_fields: list[DataField] = []
 
-    def add_field(self, field: Field) -> None:
+    def add_field(self, field: ControlField | DataField) -> None:
         if isinstance(field, ControlField):
-            self.controlfields.append(field)
+            existing_control_field = self.get_control_field(field.tag)
+            if existing_control_field:
+                print(f"Control field {field.tag} already exists for record {self.get_control_field('001')}. Merging values.")
+                existing_control_field.values.extend(field.values)
+            else:
+                self.controlfields.append(field)
         elif isinstance(field, DataField):
-            self.datafields.append(field)
+            self.data_fields.append(field)
 
-    def get_field(self, tag: str) -> list[Field]:
-        fields = []
+    def get_control_field(self, tag: str) -> ControlField | None:
         for field in self.controlfields:
             if field.tag == tag:
-                fields.append(field)
-        for field in self.datafields:
+                return field
+
+    def get_data_field(self, tag: str) -> list[ControlField | DataField]:
+        fields = []
+        for field in self.data_fields:
             if field.tag == tag:
                 fields.append(field)
         return fields
-    
+
     def to_dict(self) -> dict[str, Any]:
         record_dict = self.leader.to_dict()
-        
+
         # Collect control fields
         controlfields_dict = {}
         for field in self.controlfields:
@@ -122,7 +115,7 @@ class MarcRecord:
 
         # Collect data fields
         datafields_dict = {}
-        for field in self.datafields:
+        for field in self.data_fields:
             tag = field.tag
             if tag not in datafields_dict:
                 datafields_dict[tag] = []
@@ -139,4 +132,4 @@ class MarcRecord:
         return json.dumps(self.to_dict(), indent=4)
 
     def __repr__(self) -> str:
-        return f"MARC21Record(Leader: {self.leader}, ControlFields: {self.controlfields}, DataFields: {self.datafields})"
+        return f"MARC21Record(Leader: {self.leader}, ControlFields: {self.controlfields}, DataFields: {self.data_fields})"

@@ -6,16 +6,9 @@ authors = ["havardox <harald.varner@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.10"
-pandas = "^2.2.2"
-requests = "^2.32.3"
-ipykernel = "^6.29.5"
-lxml = "^5.2.2"
-xmlschema = "^3.3.2"
+python = "^3.9"
+requests = "^2.32.1"
 py7zr = "^0.22.0"
-pymarc = "^5.2.2"
-mypy = "^1.11.1"
-
 
 [build-system]
 requires = ["poetry-core"]

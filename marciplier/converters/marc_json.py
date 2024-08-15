@@ -13,9 +13,9 @@ class MarcJsonConversionStrategy:
             marc_record = MarcRecord(leader)
 
             # Process control fields
-            controlfields = record_dict.get("controlfields", {})
-            for tag, value in controlfields.items():
-                control_field = ControlField(tag, value)
+            controlfields: dict = record_dict.get("controlfields", {})
+            for tag, values in controlfields.items():
+                control_field = ControlField(tag=tag, values=values)
                 marc_record.add_field(control_field)
 
             # Process data fields
@@ -23,7 +23,7 @@ class MarcJsonConversionStrategy:
             for tag, content in datafields.items():
                 for field_data in content:
                     indicators = list(field_data.get("indicators", (" ", " ")))
-                    data_field = DataField(tag, indicators)
+                    data_field = DataField(tag=tag, indicators=indicators)
 
                     for subfield_dict in field_data.get("subfields", []):
                         for code, values in subfield_dict.items():

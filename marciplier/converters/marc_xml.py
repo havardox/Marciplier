@@ -94,7 +94,7 @@ class ControlField(MarcXmlElement):
         tag = self.marc_xml_state.current_attrs.get("tag")
         value = self.marc_xml_state.current_text
         # Add a new control field to the current MARC record
-        control_field = ConvertedControlField(tag=tag, value=value)
+        control_field = ConvertedControlField(tag=tag, values=[value])
         self.marc_xml_state.current_marc_record.add_field(control_field)
 
 
@@ -125,7 +125,7 @@ class Subfield(MarcXmlElement):
         value = self.marc_xml_state.current_text
 
         # Find the last data field added and add a subfield to it
-        for field in reversed(self.marc_xml_state.current_marc_record.datafields):
+        for field in reversed(self.marc_xml_state.current_marc_record.data_fields):
             if isinstance(field, ConvertedDataField) and field.tag == tag:
                 field.add_subfield(code=code, value=value)
                 break
@@ -247,7 +247,7 @@ class MarcXmlConversionStrategy:
                 )
                 control_field.text = escape(value)
 
-            for field in record.datafields:
+            for field in record.data_fields:
                 # Handle data fields
                 data_field = ET.SubElement(
                     record_elem,

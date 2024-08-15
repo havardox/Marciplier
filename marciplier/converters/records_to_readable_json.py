@@ -24,7 +24,7 @@ def records_to_readable_json(records: list[MarcRecord]):
     
     for record in records:
         # Title (MARC 245)
-        title_field = record.get_field("245")
+        title_field = record.get_data_field("245")
         if title_field:
             for field in title_field:
                 title = ''.join(field.get_subfield('a')[0].values).rstrip(" /")
