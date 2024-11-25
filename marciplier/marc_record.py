@@ -86,7 +86,7 @@ class MarcRecord:
         if isinstance(field, ControlField):
             existing_control_field = self.get_control_field(field.tag)
             if existing_control_field:
-                print(f"Control field {field.tag} already exists for record {self.get_control_field('001')}. Merging values.")
+                # print(f"Control field {field.tag} already exists for record {self.get_control_field('001')}. Merging values.")
                 existing_control_field.values.extend(field.values)
             else:
                 self.controlfields.append(field)
