@@ -1,7 +1,6 @@
 import json
 
 from marciplier.converter import convert
-from marciplier.marc_record import MarcRecord
 from marciplier.utils import download_file, extract_archive
 
 
