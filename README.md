@@ -53,6 +53,11 @@ with open("data/ERB_perioodika.json", "w") as f:
     json.dump(obj=xml_to_json_result, fp=f)
 ```
 
+<details>
+    <summary>
+Output
+     </summary>
+
 ```
 File contains 18692 records.
 
@@ -231,6 +236,8 @@ First record:
 
 Saving to JSON file...
 ```
+
+</details>
 
 ## Benchmark
 
