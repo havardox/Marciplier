@@ -136,7 +136,6 @@ class MarcXmlHandler(xml.sax.handler.ContentHandler):
     def __init__(self, max_records: int | None = None):
         super().__init__()
         self.marc_xml_state = MarcXMLState(max_records=max_records)
-        marc_ns = "marc:"  # Namespace prefix for MARC elements
         marc_element_classes = (
             Record,
             Leader,
@@ -153,7 +152,7 @@ class MarcXmlHandler(xml.sax.handler.ContentHandler):
         # Initialize and store handlers for each MARC element
         for marc_element_class in marc_element_classes:
             marc_element = marc_element_class(marc_xml_state=self.marc_xml_state)
-            element_name = f"{marc_ns}{marc_element_class.__name__.lower()}"
+            element_name = marc_element_class.__name__.lower()
             if "start" in marc_element.DEFINED_EVENTS:
                 self.elements_to_call["start"][element_name] = marc_element
             if "end" in marc_element.DEFINED_EVENTS:
@@ -161,7 +160,8 @@ class MarcXmlHandler(xml.sax.handler.ContentHandler):
 
     # Handle the start of an XML element
     def startElement(self, name, attrs):
-        marc_element = self.elements_to_call["start"].get(name)
+        local_name = name.split(":")[-1]
+        marc_element = self.elements_to_call["start"].get(local_name)
 
         self.current_element = name
         self.marc_xml_state.current_attrs = attrs
@@ -174,8 +174,9 @@ class MarcXmlHandler(xml.sax.handler.ContentHandler):
 
     # Handle the end of an XML element
     def endElement(self, name):
+        local_name = name.split(":")[-1]
         self.current_line_count = 0
-        marc_element = self.elements_to_call["end"].get(name)
+        marc_element = self.elements_to_call["end"].get(local_name)
         if marc_element is None:
             return
         marc_element.end()
