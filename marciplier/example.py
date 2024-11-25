@@ -12,5 +12,5 @@ xml_to_json_result = convert(src, src_format="xml", target_format="json")
 print(f"File contains {len(xml_to_json_result)} records.")
 
 # Save to JSON
-with open ("data/ERB_perioodika1.json", "w") as f:
+with open ("data/ERB_perioodika.json", "w") as f:
     json.dump(obj=xml_to_json_result, fp=f)
