@@ -8,18 +8,17 @@ If you found this repo through Google, please do consider giving it a star. It r
 
 ## Installation
 
-```python
+1\. Install [Python](https://wiki.python.org/moin/BeginnersGuide/Download)
+
 (From your project directory)
-1. python -m venv venv
 
-Windows:
-2. venv\Scripts\activate
+2\. python -m venv venv
 
-Unix/MacOS:
-2. source venv/bin/activate
+3\. Unix/MacOS: source venv/bin/activate
 
-3. pip install git+https://github.com/havardox/Marciplier.git
-```
+&emsp;Windows: venv\Scripts\activate
+
+4\. pip install git+https://github.com/havardox/Marciplier.git
 
 ## How to Use
 
