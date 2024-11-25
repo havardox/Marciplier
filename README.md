@@ -12,13 +12,13 @@ If you found this repo through Google, please do consider giving it a star. It r
 
 (Run the below command from your project directory)
 
-2\. python -m venv venv
+2\. `python -m venv venv`
 
-3\. Unix/MacOS: source venv/bin/activate
+3\. Unix/MacOS: `source venv/bin/activate`
 
-&emsp;Windows: venv\Scripts\activate
+&emsp;Windows: `venv\Scripts\activate`
 
-4\. pip install git+https://github.com/havardox/Marciplier.git
+4\. `pip install git+https://github.com/havardox/Marciplier.git`
 
 ## How to Use
 
