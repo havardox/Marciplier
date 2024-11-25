@@ -43,15 +43,20 @@ xml_to_json_result = convert(src, src_format="xml", target_format="json")
 
 print(f"File contains {len(xml_to_json_result)} records.\n")
 
+print("First record:\n")
+
 pprint(xml_to_json_result[0])
 
-# Save to JSON
+print("\nSaving to JSON file...")
+
 with open("data/ERB_perioodika.json", "w") as f:
     json.dump(obj=xml_to_json_result, fp=f)
 ```
 
 ```
 File contains 18692 records.
+
+First record:
 
 {'controlfields': {'001': ['b10009784'],
                    '003': ['ErRR'],
@@ -223,6 +228,8 @@ File contains 18692 records.
                                        {'a': ['ARH Per.A-1459']},
                                        {'u': ['193 [1962]']}]}]},
  'leader': '03145nas a22006611i 4500'}
+
+Saving to JSON file...
 ```
 
 ## Benchmark
