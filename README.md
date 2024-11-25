@@ -10,7 +10,7 @@ If you found this repo through Google, please do consider giving it a star. It r
 
 1\. Install [Python](https://wiki.python.org/moin/BeginnersGuide/Download)
 
-(From your project directory)
+(Run the below command from your project directory)
 
 2\. python -m venv venv
 
