@@ -18,7 +18,7 @@ Windows:
 Unix/MacOS:
 2. source venv/bin/activate
 
-3. pip install https://github.com/havardox/Marciplier.git
+3. pip install git+https://github.com/havardox/Marciplier.git
 ```
 
 ## How to Use
