@@ -236,7 +236,6 @@ First record:
 
 Saving to JSON file...
 ```
-
 </details>
 
 ## Benchmark
