@@ -1,6 +1,7 @@
-from marciplier.utils import download_file, extract_archive
-from marciplier.converter import convert
 import timeit
+
+from marciplier.converter import convert
+from marciplier.utils import download_file, extract_archive
 
 
 download_file(url="https://data.digar.ee/erb/ERB_eestikeelne_raamat.zip", filename="ERB_eestikeelne_raamat.zip", folder="data")

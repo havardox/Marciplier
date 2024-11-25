@@ -44,9 +44,8 @@ with open ("data/ERB_perioodika1.json", "w") as f:
     json.dump(obj=xml_to_json_result, fp=f)
 ```
 
-```
-File contains 18692 records.
-```
+`File contains 18692 records.`
+
 
 ## Benchmark
 
@@ -67,4 +66,4 @@ end = timeit.default_timer()
 print(f"Benchmark took {end - start:.2f} seconds or {len(result) / (end - start):.2f} records per second.")
 ```
 
-`Benchmark took 96.44 seconds or 2299.96 records per second.`
+`Benchmark took 106.86 seconds or 2090.41 records per second.`
