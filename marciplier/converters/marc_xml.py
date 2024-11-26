@@ -31,10 +31,6 @@ class MarcXMLState:
 
 class MarcXmlElement:
     """Base class for handling MARC XML elements."""
-    DEFINED_EVENTS = ()
-
-# Base class for handling different MARC XML elements
-class MarcXmlElement(object):
     DEFINED_EVENTS = ()  # Events this element class is interested in ("start" or "end")
 
     def __init__(self, marc_xml_state: MarcXMLState) -> None:
