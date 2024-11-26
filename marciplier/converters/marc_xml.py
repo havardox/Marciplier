@@ -13,24 +13,25 @@ from marciplier.marc_record import (
     DataField as ConvertedDataField,
 )
 
-
-# Custom exception to signal the parser to stop when the maximum number of records is reached
 class FinishedParsing(Exception):
+    """Signals the parser to stop when the maximum number of records is reached."""
     pass
 
-
-# Dataclass to manage the state while parsing MARC XML
 @dataclass
 class MarcXMLState:
-    max_records: int | None = None  # Maximum number of records to parse
-    current_marc_record: ConvertedRecord | None = None  # Current MARC record being parsed
-    current_text: str | None = None  # Text content of the current XML element
-    current_attrs: xml.sax.xmlreader.AttributesImpl | None = None  # Attributes of the current XML element
-    current_open_tag: str | None = None  # Name of the current open tag in the XML
-    current_record_count: int = 0  # Counter for records parsed
+    """Manages the state while parsing MARC XML."""
+    max_records: int = None # Maximum number of records to parse
+    current_marc_record: ConvertedRecord | None = None # Current MARC record being parsed
+    current_text: str | None = None # Text content of the current XML element
+    current_attrs: xml.sax.xmlreader.AttributesImpl = None # Attributes of the current XML element
+    current_open_tag: str = None # Name of the current open tag in the XML
+    current_record_count: int = 0 # Counter for number of records parsed
     finished: bool = False  # Flag to indicate if parsing should stop
-    records: list = field(default_factory=list)  # List to store all parsed MARC records
+    records: list = field(default_factory=list) # List to store all parsed MARC records
 
+class MarcXmlElement:
+    """Base class for handling MARC XML elements."""
+    DEFINED_EVENTS = ()
 
 # Base class for handling different MARC XML elements
 class MarcXmlElement(object):
@@ -40,85 +41,83 @@ class MarcXmlElement(object):
         self.marc_xml_state = marc_xml_state
 
     def start(self):
+        """Handles actions at the start of the element."""
         pass
 
     def end(self):
+        """Handles actions at the end of the element."""
         pass
 
     def __str__(self):
         return "element"
 
-
-# Class to handle the "record" element in the MARC XML
 class Record(MarcXmlElement):
-    DEFINED_EVENTS = (
-        "start",
-        "end",
-    )
+    """Handles the 'record' element in MARC XML."""
+    DEFINED_EVENTS = ("start", "end")
 
     def start(self):
-        # Initialize a new MARC record
+        """Initializes a new MARC record and checks record count."""
         self.marc_xml_state.current_marc_record = ConvertedRecord(
             leader=ConvertedLeader("")
         )
-        # Check if the maximum record count has been reached
+         # Check if the maximum record count has been reached
         if self.marc_xml_state.max_records is not None:
             self.marc_xml_state.current_record_count += 1
-            if (
-                self.marc_xml_state.current_record_count
-                > self.marc_xml_state.max_records
-            ):
+            if self.marc_xml_state.current_record_count > self.marc_xml_state.max_records:
                 # Set the finished flag to stop further parsing
                 self.marc_xml_state.finished = True
 
     def end(self):
-        # Add the completed MARC record to the records list
+        """Adds the completed MARC record to the records list."""
         self.marc_xml_state.records.append(self.marc_xml_state.current_marc_record)
 
-
 class Leader(MarcXmlElement):
+    """Handles the 'leader' element in MARC XML."""
     DEFINED_EVENTS = ("end",)
 
     def end(self):
+        """Sets the leader in the current MARC record."""
         value = self.marc_xml_state.current_text
+
         # Set the leader in the current MARC record
         self.marc_xml_state.current_marc_record.leader.value = value
 
-
-# Class to handle the "controlfield" element in the MARC XML
 class ControlField(MarcXmlElement):
+    """Handles the 'controlfield' element in MARC XML."""
     DEFINED_EVENTS = ("end",)
 
     def end(self):
+        """Adds a control field to the current MARC record."""
         tag = self.marc_xml_state.current_attrs.get("tag")
         value = self.marc_xml_state.current_text
+
         # Add a new control field to the current MARC record
         control_field = ConvertedControlField(tag=tag, values=[value])
         self.marc_xml_state.current_marc_record.add_field(control_field)
 
-
-# Class to handle the "datafield" element in the MARC XML
 class DataField(MarcXmlElement):
+    """Handles the 'datafield' element in MARC XML."""
     DEFINED_EVENTS = ("start",)
 
     def start(self):
-        # Store the tag of the current data field being parsed
+        """Adds a data field to the current MARC record."""
         tag = self.marc_xml_state.current_attrs.get("tag")
         indicators = [
             self.marc_xml_state.current_attrs.get("ind1", " "),
             self.marc_xml_state.current_attrs.get("ind2", " "),
         ]
+
         # Add a new data field to the current MARC record
         data_field = ConvertedDataField(tag=tag, indicators=indicators)
         self.marc_xml_state.current_marc_record.add_field(data_field)
         self.marc_xml_state.current_open_tag = tag
 
-
-# Class to handle the "subfield" element in the MARC XML
 class Subfield(MarcXmlElement):
+    """Handles the 'subfield' element in MARC XML."""
     DEFINED_EVENTS = ("end",)
 
     def end(self):
+        """Adds a subfield to the last data field in the current MARC record."""
         tag = self.marc_xml_state.current_open_tag
         code = self.marc_xml_state.current_attrs.get("code")
         value = self.marc_xml_state.current_text
@@ -129,24 +128,24 @@ class Subfield(MarcXmlElement):
                 field.add_subfield(code=code, value=value)
                 break
 
-
-# XML SAX content handler for parsing MARC records
 class MarcXmlHandler(xml.sax.handler.ContentHandler):
-    def __init__(self, max_records: int | None = None):
+    """XML SAX content handler for parsing MARC records."""
+
+    def __init__(self, max_records=None):
+        """
+        Initializes the handler with a maximum record count and element handlers.
+
+        Args:
+            max_records: Maximum number of records to parse.
+        """
         super().__init__()
         self.marc_xml_state = MarcXMLState(max_records=max_records)
-        marc_element_classes = (
-            Record,
-            Leader,
-            ControlField,
-            DataField,
-            Subfield,
-        )  # Classes to handle different MARC elements
-        self.current_line_count = 0  # Counter for the lines of text within an element
-        self.elements_to_call = {
-            "start": {},
-            "end": {},
-        }  # Dictionary to store handlers for start and end events
+        self.current_line_count = 0
+        # Dictionary to store handlers for start and end events
+        self.elements_to_call = {"start": {}, "end": {}}
+
+        # Classes to handle different MARC elements
+        marc_element_classes = (Record, Leader, ControlField, DataField, Subfield) 
 
         # Initialize and store handlers for each MARC element
         for marc_element_class in marc_element_classes:
@@ -157,68 +156,92 @@ class MarcXmlHandler(xml.sax.handler.ContentHandler):
             if "end" in marc_element.DEFINED_EVENTS:
                 self.elements_to_call["end"][element_name] = marc_element
 
-    # Handle the start of an XML element
     def startElement(self, name, attrs):
+        """
+        Handles the start of an XML element.
+
+        Args:
+            name: Name of the XML element.
+            attrs: Attributes of the XML element.
+        """
         local_name = name.split(":")[-1]
         marc_element = self.elements_to_call["start"].get(local_name)
 
         self.current_element = name
         self.marc_xml_state.current_attrs = attrs
-        if marc_element is None:
-            return
-        marc_element.start()
-        # If the parser has finished, raise an exception to stop parsing
-        if self.marc_xml_state.finished:
-            raise FinishedParsing
+        if marc_element is not None:
+            marc_element.start()
+            # If the parser has finished, raise an exception to stop parsing
+            if self.marc_xml_state.finished:
+                raise FinishedParsing
 
-    # Handle the end of an XML element
     def endElement(self, name):
+        """
+        Handles the end of an XML element.
+
+        Args:
+            name: Name of the XML element.
+        """
         local_name = name.split(":")[-1]
         self.current_line_count = 0
         marc_element = self.elements_to_call["end"].get(local_name)
-        if marc_element is None:
-            return
-        marc_element.end()
+        if marc_element is not None:
+            marc_element.end()
 
-    # Handle character data within an XML element
     def characters(self, content):
+        """
+        Handles character data within an XML element.
+
+        Args:
+            content: Character data to process.
+        """
         if content.strip():
             if self.current_line_count > 0:
                 # Append content to the existing text for multi-line elements
-                self.marc_xml_state.current_text = (
-                    self.marc_xml_state.current_text + content
-                )
+                self.marc_xml_state.current_text += content
             else:
                 self.current_line_count += 1
                 # Set the text content for single-line elements
                 self.marc_xml_state.current_text = content
 
-
 class MarcXmlConversionStrategy:
-    def to_records(self, src: str | os.PathLike | IO[bytes]) -> list[ConvertedRecord]:
-        content_handler = MarcXmlHandler()
+    """Handles conversion between MARC XML and internal MARC records."""
 
+    def to_records(self, src):
+        """
+        Parses MARC XML into a list of records.
+
+        Args:
+            src: Source of the MARC XML (file path, file-like object, or string).
+
+        Returns:
+            A list of parsed MarcRecords.
+        """
+        content_handler = MarcXmlHandler()
         try:
             # Parse the XML content from the provided source
             xml.sax.parse(src, content_handler)
         except FinishedParsing:
             pass
-
         return content_handler.marc_xml_state.records
 
-    def from_records(self, src: list[ConvertedRecord]) -> ET.Element:
+    def from_records(self, src):
+        """
+        Converts a list of MARC records to MARC XML format.
 
-        # Define the namespaces with the desired prefixes
+        Args:
+            src: List of MARC records to convert.
+
+        Returns:
+            Root element of the MARC XML.
+        """
         ns = {
             "marc": "http://www.loc.gov/MARC21/slim",
             "xsi": "http://www.w3.org/2001/XMLSchema-instance",
         }
-
-        # Register the namespaces to ensure the correct prefix is used
         for prefix, uri in ns.items():
             ET.register_namespace(prefix, uri)
 
-        # Create the root element <marc:collection> with the additional attributes
         root = ET.Element(
             "{http://www.loc.gov/MARC21/slim}collection",
             {
@@ -229,26 +252,18 @@ class MarcXmlConversionStrategy:
         for record in src:
             record_elem = ET.SubElement(root, "{http://www.loc.gov/MARC21/slim}record")
 
-            # Add leader element
-            leader_elem = ET.SubElement(
-                record_elem, "{http://www.loc.gov/MARC21/slim}leader"
-            )
-            value = escape(record.leader.value)
-            leader_elem.text = value
+            leader_elem = ET.SubElement(record_elem, "{http://www.loc.gov/MARC21/slim}leader")
+            leader_elem.text = escape(record.leader.value)
 
-            # Add fields
             for field in record.controlfields:
-
-                # Handle control fields
                 control_field = ET.SubElement(
                     record_elem,
                     "{http://www.loc.gov/MARC21/slim}controlfield",
                     tag=field.tag,
                 )
-                control_field.text = escape(value)
+                control_field.text = escape(field.values[0])
 
             for field in record.data_fields:
-                # Handle data fields
                 data_field = ET.SubElement(
                     record_elem,
                     "{http://www.loc.gov/MARC21/slim}datafield",
