@@ -35,7 +35,7 @@ class MarcXMLState:
 
 # Base class for handling different MARC XML elements
 class MarcXmlElement(object):
-    DEFINED_EVENTS = ()  # Events this element class is interested in ("start", "end", etc.)
+    DEFINED_EVENTS = ()  # Events this element class is interested in ("start" or "end")
 
     def __init__(self, marc_xml_state: MarcXMLState) -> None:
         self.marc_xml_state = marc_xml_state
