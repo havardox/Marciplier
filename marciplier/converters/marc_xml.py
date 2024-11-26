@@ -1,4 +1,3 @@
-# marcxml_to_records.py
 import os
 from typing import IO
 import xml.etree.ElementTree as ET
